@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Toxicity Detector</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/toxicity"></script>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+      <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">
+        Toxicity Detection
+      </h1>
+
+      <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <div class="mb-4">
+          <label for="text-input" class="block text-gray-700 font-medium mb-2"
+            >Enter text to analyze:</label
+          >
+          <textarea
+            id="text-input"
+            rows="4"
+            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></textarea>
+        </div>
+
+        <button
+          id="analyze-btn"
+          class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
+        >
+          Analyze for Toxicity
+        </button>
+
+        <div id="results" class="mt-6 space-y-4 hidden">
+          <h2 class="text-xl font-semibold text-gray-800">Results:</h2>
+          <div id="predictions" class="space-y-2"></div>
+        </div>
+
+        <div id="loading" class="mt-4 text-center hidden">
+          <div
+            class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"
+          ></div>
+          <p class="mt-2 text-gray-600">Analyzing text...</p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const threshold = 0.5;
+      let model;
+
+      const analyzeBtn = document.getElementById("analyze-btn");
+      const textInput = document.getElementById("text-input");
+      const resultsDiv = document.getElementById("results");
+      const predictionsDiv = document.getElementById("predictions");
+      const loadingDiv = document.getElementById("loading");
+
+      document.addEventListener("DOMContentLoaded", async () => {
+        try {
+          loadingDiv.classList.remove("hidden");
+          analyzeBtn.disabled = true;
+          analyzeBtn.classList.add("opacity-50", "cursor-not-allowed");
+
+          model = await toxicity.load(threshold);
+
+          loadingDiv.classList.add("hidden");
+          analyzeBtn.disabled = false;
+          analyzeBtn.classList.remove("opacity-50", "cursor-not-allowed");
+        } catch (error) {
+          console.error("Error loading model:", error);
+          loadingDiv.innerHTML = `<p class="text-red-500">Error loading model. Please try again later.</p>`;
+        }
+      });
+
+      analyzeBtn.addEventListener("click", async () => {
+        const text = textInput.value.trim();
+
+        if (!text) {
+          alert("Please enter some text to analyze.");
+          return;
+        }
+
+        try {
+          loadingDiv.classList.remove("hidden");
+          resultsDiv.classList.add("hidden");
+          predictionsDiv.innerHTML = "";
+
+          const predictions = await model.classify([text]);
+
+          displayPredictions(predictions);
+
+          loadingDiv.classList.add("hidden");
+          resultsDiv.classList.remove("hidden");
+        } catch (error) {
+          console.error("Error analyzing text:", error);
+          loadingDiv.innerHTML = `<p class="text-red-500">Error analyzing text. Please try again.</p>`;
+        }
+      });
+
+      function displayPredictions(predictions) {
+        predictionsDiv.innerHTML = "";
+
+        if (predictions.length === 0) {
+          predictionsDiv.innerHTML =
+            '<p class="text-gray-600">No toxicity detected.</p>';
+          return;
+        }
+
+        predictions.forEach((prediction) => {
+          const match = prediction.results[0].match;
+          const probability = (
+            prediction.results[0].probabilities[1] * 100
+          ).toFixed(2);
+
+          const predictionElement = document.createElement("div");
+          predictionElement.className = `p-3 rounded-md ${
+            match
+              ? "bg-red-100 border-l-4 border-red-500"
+              : "bg-green-100 border-l-4 border-green-500"
+          }`;
+
+          predictionElement.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">${prediction.label}</span>
+                        <span class="text-sm ${
+                          match ? "text-red-700" : "text-green-700"
+                        }">
+                            ${match ? "Toxic" : "Not Toxic"} (${probability}%)
+                        </span>
+                    </div>
+                `;
+
+          predictionsDiv.appendChild(predictionElement);
+        });
+      }
+    </script>
+  </body>
+</html>

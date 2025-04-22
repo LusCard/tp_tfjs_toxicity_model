@@ -1,0 +1,25 @@
+{
+  "name": "toxicity_tfjs_model",
+  "version": "1.0.0",
+  "main": "demo.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LusCard/tp_tfjs_toxicity_model.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LusCard/tp_tfjs_toxicity_model/issues"
+  },
+  "homepage": "https://github.com/LusCard/tp_tfjs_toxicity_model#readme",
+  "description": "",
+  "dependencies": {
+    "@tensorflow-models/toxicity": "^1.2.2",
+    "@tensorflow/tfjs": "^4.22.0"
+  }
+}
